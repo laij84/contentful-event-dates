@@ -2,5 +2,5 @@
   "id": "recurring-events",
   "name": "recurring-events",
   "srcdoc": "./build/index.html",
-  "fieldTypes": ["Text"]
+  "fieldTypes": ["Object"]
 }

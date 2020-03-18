@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useCallback, useReducer, useEffect } from 'react'
+import React, { useLayoutEffect, useReducer, useEffect, useMemo, useCallback } from 'react'
 import { render } from 'react-dom'
 import { Picker } from './components/Picker/Picker'
 import ids from 'shortid'
@@ -13,6 +13,7 @@ import {
 import { init, FieldExtensionSDK } from 'contentful-ui-extensions-sdk'
 import '@contentful/forma-36-react-components/dist/styles.css'
 import './index.css'
+import isEqual from 'lodash.isequal'
 
 interface EventDate {
   id: string
@@ -37,106 +38,128 @@ type Action =
   | { type: 'DELETE'; payload: Partial<EventDate> }
   | { type: 'SET'; payload: AppState }
 
-type AppState = EventDate[]
+type AppState = {
+  dates: EventDate[]
+}
+
+function dateComparator(a: EventDate, b: EventDate) {
+  return a.startDate.getTime() - b.startDate.getTime()
+}
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'CREATE':
-      return [
-        ...state,
-        {
-          id: ids.generate(),
-          startDate: addOneDay(state[state.length - 1].startDate),
-          endDate: addOneDay(state[state.length - 1].endDate)
-        }
-      ].sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+      return {
+        dates: [
+          ...state.dates,
+          {
+            id: ids.generate(),
+            startDate: addOneDay(state.dates[state.dates.length - 1].startDate),
+            endDate: addOneDay(state.dates[state.dates.length - 1].endDate)
+          }
+        ].sort(dateComparator)
+      }
     case 'UPDATE':
-      return state
-        .map(event => {
-          if (action.payload && event.id === action.payload.id) {
-            return { ...event, ...action.payload }
-          }
-          return event
-        })
-        .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+      return {
+        dates: state.dates
+          .map(event => {
+            if (action.payload && event.id === action.payload.id) {
+              return { ...event, ...action.payload }
+            }
+            return event
+          })
+          .sort(dateComparator)
+      }
     case 'DELETE':
-      return state
-        .filter(event => {
-          if (action.payload) {
-            return event.id !== action.payload.id
-          }
-          return true
-        })
-        .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+      return {
+        dates: state.dates
+          .filter(event => {
+            if (action.payload) {
+              return event.id !== action.payload.id
+            }
+            return true
+          })
+          .sort(dateComparator)
+      }
     case 'SET':
+      if (isEqual(state, action.payload)) {
+        return state
+      } 
       return action.payload
     default:
       return state
   }
 }
 
-function convertToJson(state: AppState): string {
-  return JSON.stringify(
-    state.map(date => ({
-      id: date.id,
-      startDate: date.startDate.toISOString(),
-      endDate: date.endDate.toISOString()
-    }))
-  )
-}
-
-interface JsonEventDate {
+interface SerializedEventDate {
   id: string
   startDate: string
   endDate: string
 }
 
-function convertToJs(state: string): AppState {
-  return JSON.parse(state).map((date: JsonEventDate) => ({
-    id: date.id,
-    startDate: new Date(date.startDate),
-    endDate: new Date(date.endDate)
-  }))
+function parseDates({ id, startDate, endDate }: SerializedEventDate): EventDate {
+  return {
+    id,
+    startDate: new Date(startDate),
+    endDate: new Date(endDate)
+  }
 }
 
-const initialState: AppState = [{ id: ids.generate(), startDate: new Date(), endDate: new Date() }]
+function serializeDates({ id, startDate, endDate }: EventDate): SerializedEventDate {
+  return {
+    id,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString()
+  }
+}
+
+type ContentfulAppState = { dates: SerializedEventDate[] } | null
+
+function parseContentfulAppState(state: ContentfulAppState) {
+  if (!state) {
+    return { dates: [{ id: ids.generate(), startDate: new Date(), endDate: new Date() }] }
+  }
+
+  return {
+    dates: state.dates.map(parseDates)
+  }
+}
 
 export const App: React.FC<AppProps> = ({ sdk }) => {
-  const [state, dispatch] = useReducer(
-    reducer,
-    sdk.field.getValue() ? convertToJs(sdk.field.getValue()) : initialState
-  )
+  const initialState = useMemo((): AppState => parseContentfulAppState(sdk.field.getValue()), [
+    sdk.field
+  ])
 
-  useEffect(() => {
-    async function onChange() {
+  const [state, dispatch] = useReducer(reducer, initialState)
+
+  const onChange = useCallback(
+    async (state: AppState) => {
       if (state) {
-        await sdk.field.setValue(convertToJson(state))
+        await sdk.field.setValue({ dates: state.dates.map(serializeDates) })
       } else {
         await sdk.field.removeValue()
       }
+    },
+    [sdk.field]
+  )
+
+  useEffect(() => {
+    onChange(state)
+  }, [onChange, state])
+
+  useEffect(() => {
+    const detachExternalChangeHandler = sdk.field.onValueChanged((value: ContentfulAppState) => {
+      dispatch({ type: 'SET', payload: parseContentfulAppState(value) })
+    })
+
+    return () => {
+      detachExternalChangeHandler()
     }
-    onChange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state])
-
-  const onExternalChange = useCallback(
-    (value: string) => dispatch({ type: 'SET', payload: convertToJs(JSON.parse(value)) }),
-    []
-  )
-
-  // Handler for external field value changes (e.g. when multiple authors are working on the same entry).
-  const detachExternalChangeHandler = useCallback(
-    () => sdk.field.onValueChanged(onExternalChange),
-    [onExternalChange, sdk.field]
-  )
+  }, [])
 
   useLayoutEffect(() => {
     sdk.window.startAutoResizer()
-    return () => {
-      if (detachExternalChangeHandler) {
-        detachExternalChangeHandler()
-      }
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -151,7 +174,7 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {state.map((date: EventDate) => (
+          {state.dates.map((date: EventDate) => (
             <TableRow key={date.id}>
               <TableCell>
                 <Picker
@@ -173,9 +196,9 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
               </TableCell>
               <TableCell>
                 <Button
-                  disabled={state.length <= 1}
+                  disabled={state.dates.length <= 1}
                   onClick={() => {
-                    if (state.length > 1) {
+                    if (state.dates.length > 1) {
                       dispatch({ type: 'DELETE', payload: { id: date.id } })
                     }
                   }}>
