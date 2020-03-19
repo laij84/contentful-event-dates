@@ -8,3 +8,11 @@ div {
   font: inherit;
   vertical-align: baseline;
 }
+
+.mr-sm {
+  margin-right: var(--spacing-s);
+}
+
+.mb-sm {
+  margin-bottom: var(--spacing-s);
+}

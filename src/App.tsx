@@ -9,6 +9,7 @@ import {
 } from '@contentful/forma-36-react-components'
 import { Picker } from './components/Picker/Picker'
 import '@contentful/forma-36-react-components/dist/styles.css'
+import '@contentful/forma-36-tokens/dist/css/index.css'
 import './index.css'
 import { AppProps, AppState, ContentfulAppState, EventDate } from './App.types'
 import { parseContentfulAppState, reducer, serializeDates } from './App.utils'
@@ -53,7 +54,7 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
 
   return (
     <>
-      <Table>
+      <Table className="mb-sm">
         <TableHead>
           <TableRow>
             <TableCell>Start Date/Time</TableCell>
@@ -98,10 +99,24 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
         </TableBody>
       </Table>
       <Button
+        className="mr-sm"
         onClick={() => {
-          dispatch({ type: 'CREATE' })
+          dispatch({ type: 'CREATE', payload: 0 })
         }}>
-        Add another date
+        Add for same day
+      </Button>
+      <Button
+        className="mr-sm"
+        onClick={() => {
+          dispatch({ type: 'CREATE', payload: 1 })
+        }}>
+        Add for next day
+      </Button>
+      <Button
+        onClick={() => {
+          dispatch({ type: 'CREATE', payload: 7 })
+        }}>
+        Add for next week
       </Button>
     </>
   )

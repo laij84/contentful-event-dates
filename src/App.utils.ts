@@ -1,12 +1,12 @@
-import {AppState, Action, SerializedEventDate, EventDate, ContentfulAppState} from './App.types'
 import ids from 'shortid'
 import isEqual from 'lodash.isequal'
+import { Action, AppState, ContentfulAppState, EventDate, SerializedEventDate } from './App.types'
 
-export function addOneDay(date: Date): Date {
-  const tomorrow = new Date()
-  tomorrow.setTime(date.getTime())
-  tomorrow.setDate(date.getDate() + 1)
-  return tomorrow
+export function addDays(date: Date, days: number): Date {
+  const newDate = new Date()
+  newDate.setTime(date.getTime())
+  newDate.setDate(date.getDate() + days)
+  return newDate
 }
 
 export function dateComparator(a: EventDate, b: EventDate) {
@@ -21,8 +21,8 @@ export function reducer(state: AppState, action: Action): AppState {
           ...state.dates,
           {
             id: ids.generate(),
-            startDate: addOneDay(state.dates[state.dates.length - 1].startDate),
-            endDate: addOneDay(state.dates[state.dates.length - 1].endDate)
+            startDate: addDays(state.dates[state.dates.length - 1].startDate, action.payload),
+            endDate: addDays(state.dates[state.dates.length - 1].endDate, action.payload)
           }
         ].sort(dateComparator)
       }
@@ -51,14 +51,12 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'SET':
       if (isEqual(state, action.payload)) {
         return state
-      } 
+      }
       return action.payload
     default:
       return state
   }
 }
-
-
 
 export function parseDates({ id, startDate, endDate }: SerializedEventDate): EventDate {
   return {

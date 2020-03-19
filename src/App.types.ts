@@ -11,7 +11,7 @@ export interface AppProps {
 }
 
 export type Action =
-  | { type: 'CREATE' }
+  | { type: 'CREATE'; payload: number }
   | { type: 'UPDATE'; payload: Partial<EventDate> }
   | { type: 'DELETE'; payload: Partial<EventDate> }
   | { type: 'SET'; payload: AppState }
