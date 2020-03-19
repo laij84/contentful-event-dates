@@ -18,34 +18,36 @@ module.exports = {
     warnOnUnsupportedTypeScriptVersion: true,
   },
   rules: {
-      'prettier/prettier': 'error',
-      'import/extensions': 'error',
-      'import/first': 'error',
-      'import/order': 'error',
-      'import/no-deprecated': 'error',
-      'import/no-duplicates': 'error',
-      'import/no-extraneous-dependencies': 'off',
-      'import/no-named-as-default': 'off',
-      'import/no-unresolved': 'error',
-      'import/prefer-default-export': 'off',
-      'import/no-default-export': 'error', 
-      'react/prop-types': 'off',
-      'sort-imports': [
-        'error',
-        {
-            ignoreCase: false,
-            ignoreDeclarationSort: true,
-            ignoreMemberSort: false,
-            memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
-        },
+    'prettier/prettier': 'error',
+    'import/extensions': 'error',
+    'import/first': 'error',
+    'import/order': 'error',
+    'import/no-deprecated': 'error',
+    'import/no-duplicates': 'error',
+    'import/no-extraneous-dependencies': 'off',
+    'import/no-named-as-default': 'off',
+    'import/no-unresolved': 'error',
+    'import/prefer-default-export': 'off',
+    'import/no-default-export': 'error', 
+    'react/prop-types': 'off',
+    'sort-imports': [
+      'error',
+      {
+          ignoreCase: false,
+          ignoreDeclarationSort: true,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+      },
     ],
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          args: 'none',
-          ignoreRestSiblings: true,
-        },
-      ],
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        args: 'none',
+        ignoreRestSiblings: true,
+      },
+    ],
   },
   settings: {
     'import/resolver': {

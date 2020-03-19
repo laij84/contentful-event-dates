@@ -42,7 +42,9 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
     })
 
     return () => {
-      detachExternalChangeHandler()
+      if (detachExternalChangeHandler) {
+        detachExternalChangeHandler()
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -64,9 +66,10 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
         </TableHead>
         <TableBody>
           {state.dates.map((date: EventDate) => (
-            <TableRow key={date.id}>
+            <TableRow key={date.id} data-testid="event-row">
               <TableCell>
                 <Picker
+                  data-testid="start-picker"
                   onDateChange={(startDate, id) =>
                     dispatch({ type: 'UPDATE', payload: { id, startDate } })
                   }
@@ -76,6 +79,7 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
               </TableCell>
               <TableCell>
                 <Picker
+                  data-testid="end-picker"
                   onDateChange={(endDate, id) =>
                     dispatch({ type: 'UPDATE', payload: { id, endDate } })
                   }
@@ -99,6 +103,7 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
         </TableBody>
       </Table>
       <Button
+        data-testid="same-day"
         className="mr-sm"
         onClick={() => {
           dispatch({ type: 'CREATE', payload: 0 })
@@ -106,6 +111,7 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
         Add for same day
       </Button>
       <Button
+        data-testid="next-day"
         className="mr-sm"
         onClick={() => {
           dispatch({ type: 'CREATE', payload: 1 })
@@ -113,6 +119,7 @@ export const App: React.FC<AppProps> = ({ sdk }) => {
         Add for next day
       </Button>
       <Button
+        data-testid="next-week"
         onClick={() => {
           dispatch({ type: 'CREATE', payload: 7 })
         }}>

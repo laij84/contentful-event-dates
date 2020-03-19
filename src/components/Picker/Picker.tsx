@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
@@ -15,7 +15,7 @@ interface PickerProps {
   date: Date
   id: string
 }
-export const Picker: React.FC<PickerProps> = ({ onDateChange, date, id }) => {
+export const Picker: React.FC<PickerProps> = ({ onDateChange, date, id, ...props }) => {
   const [eventDate, setDate] = useState<Date>(date || new Date())
   const [open, setOpen] = useState<boolean>(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -35,7 +35,7 @@ export const Picker: React.FC<PickerProps> = ({ onDateChange, date, id }) => {
   }, [])
 
   return (
-    <div ref={ref}>
+    <div ref={ref} {...props}>
       <div className="TextInput__TextInput___36-K- TextInput__TextInput--full___1EJEW">
         <input
           className="TextInput__TextInput__input___27vDB a11y__focus-border--default___60AXp"
