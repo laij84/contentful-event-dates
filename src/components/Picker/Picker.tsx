@@ -1,24 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import { Button, Icon } from '@contentful/forma-36-react-components'
+import ids from 'shortid'
+import { PickerProps } from './Picker.types'
+import { formatDate } from './Picker.utils'
 
-function formatDate(date: Date) {
-  return `${date.toLocaleString('en-gb', {
-    weekday: 'short'
-  })} ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${
-    date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes()
-  }`
-}
-
-interface PickerProps {
-  onDateChange: (date: Date, id: string) => void
-  date: Date
-  id: string
-}
 export const Picker: React.FC<PickerProps> = ({ onDateChange, date, id, ...props }) => {
   const [eventDate, setDate] = useState<Date>(date || new Date())
   const [open, setOpen] = useState<boolean>(false)
   const ref = useRef<HTMLDivElement>(null)
+  const dropdownId = useMemo(() => ids.generate(), [])
 
   const handleClick = (e: Event): void => {
     if (ref && ref.current && !ref.current.contains(e.target as Node)) {
@@ -36,9 +28,10 @@ export const Picker: React.FC<PickerProps> = ({ onDateChange, date, id, ...props
 
   return (
     <div ref={ref} {...props}>
-      <div className="TextInput__TextInput___36-K- TextInput__TextInput--full___1EJEW">
+      <div className="datepicker-wrapper">
         <input
-          className="TextInput__TextInput__input___27vDB a11y__focus-border--default___60AXp"
+          data-testid="datepicker-input"
+          aria-hidden="true"
           type="text"
           value={formatDate(eventDate)}
           onFocus={() => setOpen(true)}
@@ -46,20 +39,32 @@ export const Picker: React.FC<PickerProps> = ({ onDateChange, date, id, ...props
             return
           }}
         />
+        <Button
+          buttonType="positive"
+          aria-label={open ? 'Close datepicker' : 'Open datepicker'}
+          aria-haspopup="true"
+          aria-expanded={open}
+          aria-controls={dropdownId}
+          onClick={() => setOpen(!open)}
+          data-testid="datepicker-button">
+          <Icon icon={open ? 'ArrowUp' : 'ArrowDown'} color="white" />
+        </Button>
       </div>
 
       {open && (
-        <DatePicker
-          selected={eventDate}
-          onChange={(pickedDate: Date) => {
-            setDate(pickedDate)
-            onDateChange(pickedDate, id)
-          }}
-          showTimeInput
-          timeFormat="HH:mm"
-          dateFormat="MMMM d, yyyy h:mm aa"
-          inline
-        />
+        <div aria-hidden={!open} id={dropdownId}>
+          <DatePicker
+            selected={eventDate}
+            onChange={(pickedDate: Date) => {
+              setDate(pickedDate)
+              onDateChange(pickedDate, id)
+            }}
+            showTimeInput
+            timeFormat="HH:mm"
+            dateFormat="MMMM d, yyyy h:mm aa"
+            inline
+          />
+        </div>
       )}
     </div>
   )

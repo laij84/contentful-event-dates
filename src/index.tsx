@@ -1,7 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { init, FieldExtensionSDK } from 'contentful-ui-extensions-sdk'
-import { App } from './App' 
+import { FieldExtensionSDK, init } from 'contentful-ui-extensions-sdk'
+import { App } from './App'
 
 init(sdk => {
   render(<App sdk={sdk as FieldExtensionSDK} />, document.getElementById('root'))
